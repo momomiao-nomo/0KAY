@@ -45,6 +45,26 @@ ui.fetchPatches().then(applyPatchesAndRematch).catch(() => {
   registerPatchRoutes()
 })
 
+/**
+ * Load every `bootstrap` plugin module once at startup. The host does not edit
+ * index.html for this: each module self-installs on import (darkmode.theme.js
+ * runs install() as a side effect and also exports it). Loading is best-effort
+ * — one bad module must not block the others or the app.
+ */
+async function loadBootstrapModules(modules: string[]) {
+  await Promise.all(
+    (modules || []).map((url) =>
+      import(/* @vite-ignore */ url)
+        .then((mod: any) => {
+          if (mod && typeof mod.install === 'function') mod.install()
+        })
+        .catch((e) => console.warn('[bootstrap] failed to load module:', url, e)),
+    ),
+  )
+}
+
+loadBootstrapModules(ui.bootstrapModules)
+
 // Re-register when polling refreshes ops (new patch files at runtime).
 ui.$subscribe(() => {
   if (ui.loaded) applyPatchesAndRematch()

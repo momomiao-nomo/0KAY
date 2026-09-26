@@ -313,6 +313,18 @@ export const useUIPatchesStore = defineStore('uiPatches', () => {
     return chatSlots.value.filter((s) => s.region === region)
   }
 
+  /**
+   * Modules declared by `target: "bootstrap"` ops (e.g. darkmode's theme.js).
+   * The host imports each once at startup so the plugin applies on every page
+   * load without editing index.html. The plugin contract: importing the module
+   * runs its side effects (install()), and `install` is also exported.
+   */
+  const bootstrapModules = computed<string[]>(() =>
+    opsFor('bootstrap')
+      .filter((op) => op.op === 'insert' && op.item && typeof (op.item as any).module === 'string')
+      .map((op) => (op.item as any).module as string),
+  )
+
   /** Patch-only tabs that declare their own fields (not a builtin component pane). */
   const patchFieldTabs = computed(() =>
     settingsTabs.value.filter((t) => t.fields && t.fields.length > 0 && !isBuiltinSettingsId(t.id)),
@@ -340,6 +352,7 @@ export const useUIPatchesStore = defineStore('uiPatches', () => {
     removedSettingsIds,
     chatSlots,
     chatRegion,
+    bootstrapModules,
     patchFieldTabs,
     isBuiltinSettingsId,
     hasSettingsTab,
