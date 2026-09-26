@@ -14,6 +14,31 @@
         }
       }
     </script>
+    <!-- 0kay-darkmode 内联引导：宿主 WebUI 未实现 bootstrap target 时的回退（见插件 README）。
+         同步设置 <html data-theme> 防首屏闪白，并异步注入 theme.js 使主题在每个页面自动生效。 -->
+    <script>
+      try {
+        var m = localStorage.getItem('0kay_theme_mode') || 'auto';
+        var dark;
+        if (m === 'dark') dark = true;
+        else if (m === 'light') dark = false;
+        else if (m === 'schedule') {
+        } else {
+          dark = matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) { document.documentElement.dataset.theme = 'light'; }
+      (function () {
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.src = '/api/plugins/darkmode/ui/theme.js';
+        document.head.appendChild(s);
+      })();
+    </script>
+    <style>
+      html[data-theme="dark"] { color-scheme: dark; background: #14161d; }
+      html[data-theme="dark"] body { background: #14161d; color: #e3e6ee; }
+    </style>
   </head>
   <body>
     <div id="app"></div>
